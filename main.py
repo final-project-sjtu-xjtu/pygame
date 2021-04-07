@@ -144,7 +144,7 @@ def play():
         get_speed()
         player.move(speed)
 
-
+    pg.image.save(screen, "screenshot.jpg")
     pg.quit()
 
 
