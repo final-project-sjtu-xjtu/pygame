@@ -9,7 +9,7 @@ WHITE = 255, 255, 255
 RED = 255, 0, 0
 width = height = 30
 block_group = []
-speed = [2, 0]
+speed = [0, 0]
 
 
 def get_speed():
@@ -17,6 +17,7 @@ def get_speed():
 
     :return:
     '''
+    pass
 
 
 # functions to create our resources

@@ -1,5 +1,8 @@
 from random import randint, choice
 from enum import Enum
+from random import seed
+
+seed(0)
 
 
 class MAP_ENTRY_TYPE(Enum):
