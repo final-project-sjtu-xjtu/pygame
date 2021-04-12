@@ -79,7 +79,7 @@ def play():
     screen = pg.display.set_mode((1500, 1500))
 
     # Get the maze
-    background_group = maze_map_generator.get_a_maze_map()
+    maze_map = maze_map_generator.get_a_maze_map()
 
     # Create The Background
     background = pg.Surface(screen.get_size())
@@ -88,7 +88,7 @@ def play():
 
     # Display The Background
     screen.blit(background, (0, 0))
-    pg.display.flip()
+    pg.display.flip()  # Update the screen
 
     # Prepare Game Objects
     wallsprites = pg.sprite.Group()
@@ -96,18 +96,18 @@ def play():
     end_x = end_y = 0
     # print(type(background_group))
     cnt = 0
-    for i in range(len(background_group[0])):
-        for j in range(len(background_group)):
-            if background_group[j][i] == 1:
+    for i in range(len(maze_map[0])):
+        for j in range(len(maze_map)):
+            if maze_map[j][i] == 1:
                 wall = WallUnit(i, j)
                 block_group.append(wall)
                 wallsprites.add(wall)
-            elif background_group[j][i] == 0:
-                if cnt == 0:
+            elif maze_map[j][i] == 0:
+                if cnt == 0:  # 左上的第一个非墙标记为起点
                     beginpos_x = i
                     beginpos_y = j
                 cnt = cnt + 1
-                end_x = i
+                end_x = i  # 右下的最后一个标记为终点
                 end_y = j
     player = Player(beginpos_x, beginpos_y)
     endpoint = EndPoint(end_x, end_y)
