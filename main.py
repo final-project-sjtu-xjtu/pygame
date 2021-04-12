@@ -2,21 +2,21 @@ import pygame as pg
 import sys, os
 from pygame.compat import geterror
 import math
-import maze_generator
+import maze_map_generator
 
 BLACK = 0, 0, 0
 WHITE = 255, 255, 255
 RED = 255, 0, 0
-width = height = 30
+width = height = 20
 block_group = []
 speed = [0, 0]
 
 
 def get_speed():
-    '''
+    """
 
     :return:
-    '''
+    """
     pass
 
 
@@ -41,15 +41,15 @@ class Player(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self)  # call Sprite initializer
         self.image = pg.image.load("Player.png")
         # self.image, self.rect = load_image("Player.png")
-        self.rect = self.image.get_rect().move(begin_x * width + width/2 - 7, begin_y * height + height/2 - 6)
+        self.rect = self.image.get_rect().move(begin_x * width + width / 2 - 7, begin_y * height + height / 2 - 6)
 
     def move(self, speed):
         self.rect = self.rect.move(speed)
 
-    def compute_dis(self,end_x, end_y):
+    def compute_dis(self, end_x, end_y):
         dis_x = abs(self.rect.centerx - end_x)
         dis_y = abs(self.rect.centery - end_y)
-        return math.sqrt((dis_x**2)+(dis_y**2))
+        return math.sqrt((dis_x ** 2) + (dis_y ** 2))
 
 
 class WallUnit(pg.sprite.Sprite):
@@ -69,16 +69,17 @@ class EndPoint(pg.sprite.Sprite):
         self.image.fill(RED)
         self.rect = self.image.get_rect().move(end_x * width, end_y * height)
 
+
 def play():
     """this function is called when the program starts.
        it initializes everything it needs, then runs in
        a loop until the function returns."""
     # Initialize Everything
     pg.init()
-    screen = pg.display.set_mode((930, 630))
+    screen = pg.display.set_mode((1500, 1500))
 
     # Get the maze
-    background_group = maze_generator.run()
+    background_group = maze_map_generator.get_a_maze_map()
 
     # Create The Background
     background = pg.Surface(screen.get_size())
@@ -113,7 +114,6 @@ def play():
     print("the start point is:", "(", beginpos_x, ",", beginpos_y, ")")
     print("the start point is:", "(", end_x, ",", end_y, ")")
 
-
     # Main Loop
     going = True
     while going:
@@ -123,7 +123,7 @@ def play():
         if pg.sprite.spritecollideany(player, wallsprites):
             print("Got a collision")
             break
-        elif player.compute_dis(endpoint.rect.centerx,endpoint.rect.centery) < 5:
+        elif player.compute_dis(endpoint.rect.centerx, endpoint.rect.centery) < 5:
             print("Successfully reached the end")
             break
 
@@ -145,7 +145,7 @@ def play():
         get_speed()
         player.move(speed)
 
-    pg.image.save(screen, "screenshot.jpg")
+    pg.image.save(screen, "screenshot.jpg")  # 截图方法
     pg.quit()
 
 
