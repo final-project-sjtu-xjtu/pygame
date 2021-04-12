@@ -69,20 +69,6 @@ class PlayBoard:
         self.speed = [0, 0]
         # self.play()
 
-    def get_speed(self):
-        pass
-        # for event in pg.event.get():
-        #     if event.type == K_w:
-        #         self.speed = [0, -1]
-            # elif event.type == K_s:
-            #     self.speed = [0, 1]
-            # elif event.type == K_a:
-            #     self.speed = [-1, 0]
-            # elif event.type == K_d:
-            #     self.speed = [1, 0]
-            # else:
-            #     self.speed = [0, 0]
-
     def watch_keyboard(self):
         self.speed = [0, 0]
         events = pg.event.get()
