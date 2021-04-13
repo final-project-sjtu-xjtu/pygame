@@ -2,13 +2,13 @@ import math
 import random
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
+# import torch
 
 show_animation = True
 
 
 class RRT:
-    class Node:
+    class Node:   # 节点类，每个节点都存储了从父节点到当前节点的完整路径
         def __init__(self, x, y):
             self.x = x
             self.y = y
@@ -42,14 +42,15 @@ class RRT:
         animation: flag for animation on or off
         """
 
-        self.node_list = [self.start]
+        self.node_list = [self.start]   # 建立树， start point 为根节点
         for i in range(self.max_iter):
-            rnd_node = self.get_random_node()
-            nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)
+            rnd_node = self.get_random_node()      # 随机取点
+            nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)     # 找到树上距离随机点最近的节点
             nearest_node = self.node_list[nearest_ind]
 
+            # 从nearest_node上，朝着 rnd_node 方向生长一个步长(expand_dis)得到新的节点
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
-
+            # 检查新节点是否满足要求(没有碰撞)，满足则加入到树中
             if self.check_collision(new_node, self.obstacle_list):
                 self.node_list.append(new_node)
 
@@ -65,7 +66,7 @@ class RRT:
         return None
 
     def steer(self, from_node, to_node, extend_length=float("inf")):
-        '''extend the node list'''
+        '''extend the node list '''
         new_node = self.Node(from_node.x, from_node.y)
         d, theta = self.calc_distance_and_angle(new_node, to_node)
 
@@ -80,6 +81,7 @@ class RRT:
         for _ in range(n_expand):
             new_node.x += self.path_resolution * math.cos(theta)
             new_node.y += self.path_resolution * math.sin(theta)
+            # 将两点间的路径加入到该节点所存储的路径中
             new_node.path_x.append(new_node.x)
             new_node.path_y.append(new_node.y)
 
@@ -93,6 +95,11 @@ class RRT:
         return new_node
 
     def generate_final_course(self, goal_ind):
+
+        """
+        产生最终的完整路径
+        """
+
         path = [[self.end.x, self.end.y]]
         node = self.node_list[goal_ind]
         while node.parent is not None:
@@ -145,7 +152,7 @@ class RRT:
         plt.plot(xl, yl, color)
 
     @staticmethod
-    def get_nearest_node_index(node_list, rnd_node):
+    def get_nearest_node_index(node_list, rnd_node):        # 找最近节点
         dlist = [(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
                  ** 2 for node in node_list]
         minind = dlist.index(min(dlist))

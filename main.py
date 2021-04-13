@@ -76,7 +76,7 @@ def play():
        a loop until the function returns."""
     # Initialize Everything
     pg.init()
-    screen = pg.display.set_mode((1500, 1500))
+    screen = pg.display.set_mode((1400, 1000))
 
     # Get the maze
     maze_map = maze_map_generator.get_a_maze_map()

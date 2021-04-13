@@ -86,10 +86,9 @@ class PlayBoard:
                 elif event.key == K_d:
                     self.speed = [1 * self.absolute_speed, 0]
 
-
     def play(self):
         pg.init()
-        screen = pg.display.set_mode((1500, 1500))
+        screen = pg.display.set_mode((1000, 1000))
 
         # Get the maze map
         maze_map = maze_map_generator.get_a_maze_map(self.WIDTH, self.HEIGHT)
@@ -156,7 +155,7 @@ class PlayBoard:
             screen.blit(endpoint.image, endpoint.rect)
             pg.display.update()
             pg.display.flip()
-            self.get_speed()
+            # self.get_speed()
             print(self.speed)
             player.move(self.speed)
 
@@ -164,3 +163,4 @@ class PlayBoard:
 if __name__ == '__main__':
     p = PlayBoard()
     p.play()
+
