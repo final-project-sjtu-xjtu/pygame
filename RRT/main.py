@@ -39,7 +39,7 @@ class RRT:
     def planning(self, animation=True):
         """
         rrt path planning
-        animation: flag for animation on or off
+        animation: flag for animation on  or off
         """
 
         self.node_list = [self.start]   # 建立树， start point 为根节点
