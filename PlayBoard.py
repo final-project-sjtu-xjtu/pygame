@@ -67,6 +67,7 @@ class PlayBoard:
         self.speed = [0, 0]
         self.block_group = []
         self.speed = [0, 0]
+        self.player = Player(0, 0, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         # self.play()
 
     def watch_keyboard(self):
@@ -86,6 +87,7 @@ class PlayBoard:
                 elif event.key == K_d:
                     self.speed = [1 * self.absolute_speed, 0]
 
+    # def
 
     def play(self):
         pg.init()
