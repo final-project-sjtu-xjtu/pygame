@@ -6,6 +6,7 @@ import maze_map_generator
 from maze_map_generator import MazeMapGenerator
 from pygame.locals import *
 from random import seed
+from typing import Tuple
 
 seed(0)
 
@@ -31,6 +32,20 @@ class Player(pg.sprite.Sprite):
         self.image = pg.image.load("Player.png")
         # self.image, self.rect = load_image("Player.png")
         self.rect = self.image.get_rect().move(begin_x * width + width / 2 - 7, begin_y * height + height / 2 - 6)
+
+    def move_2_specified_position(self, x: int, y: int) -> None:
+        """在给定坐标刷新车，并把之前出现过的车都清除（我理解，清除这一步应该是要改主函数）。"""
+        pass
+
+    def algo(self) -> Tuple[int, int]:
+        """返回车要去的点"""
+        x = y = 0
+        pass
+        return x, y
+
+    def collision_detect(self, x1, y1, x2, y2) -> bool:
+        """Move the car from (x1, y1) to (x2, y2), find out if there are any collisions"""
+        return False
 
     def move(self, speed):
         self.rect = self.rect.move(speed)
@@ -124,7 +139,7 @@ class PlayBoard:
                     cnt = cnt + 1
                     end_x = i  # 右下的最后一个标记为终点
                     end_y = j
-        player = Player(begin_x, begin_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+        self.player = Player(begin_x, begin_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         endpoint = EndPoint(end_x, end_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         print("the start point is:", "(", begin_x, ",", begin_y, ")")
         print("the start point is:", "(", end_x, ",", end_y, ")")
@@ -136,10 +151,10 @@ class PlayBoard:
             clock.tick(20)
             # check end
 
-            if pg.sprite.spritecollideany(player, wallsprites):
+            if pg.sprite.spritecollideany(self.player, wallsprites):
                 print("Got a collision")
                 break
-            elif player.compute_dis(endpoint.rect.centerx, endpoint.rect.centery) < 5:
+            elif self.player.compute_dis(endpoint.rect.centerx, endpoint.rect.centery) < 5:
                 print("Successfully reached the end")
                 break
 
@@ -154,15 +169,88 @@ class PlayBoard:
             # Draw Everything
             screen.blit(background, (0, 0))
             wallsprites.draw(screen)
-            screen.blit(player.image, player.rect)
+            screen.blit(self.player.image, self.player.rect)
             screen.blit(endpoint.image, endpoint.rect)
             pg.display.update()
             pg.display.flip()
             # self.get_speed()
             print(self.speed)
-            player.move(self.speed)
+            self.player.move(self.speed)
+
+    def play_4_fun(self):
+        pg.init()
+        screen = pg.display.set_mode((1000, 1000))
+
+        # Get the maze map
+        maze_map = maze_map_generator.get_a_maze_map(self.WIDTH, self.HEIGHT)
+
+        # Create The Background
+        background = pg.Surface(screen.get_size())
+        background = background.convert()
+        background.fill((250, 250, 250))
+
+        # Display The Background
+        screen.blit(background, (0, 0))
+        pg.display.flip()
+        # Prepare Game Objects
+        wallsprites = pg.sprite.Group()
+        clock = pg.time.Clock()
+        end_x = end_y = 0
+        begin_x = begin_y = 0
+        # print(type(background_group))
+        cnt = 0
+        for i in range(len(maze_map[0])):
+            for j in range(len(maze_map)):
+                if maze_map[j][i] == 1:
+                    wall = WallUnit(i, j, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+                    self.block_group.append(wall)
+                    wallsprites.add(wall)
+                elif maze_map[j][i] == 0:
+                    if cnt == 0:  # 左上的第一个非墙标记为起点
+                        begin_x = i
+                        begin_y = j
+                    cnt = cnt + 1
+                    end_x = i  # 右下的最后一个标记为终点
+                    end_y = j
+        self.player = Player(begin_x, begin_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+        endpoint = EndPoint(end_x, end_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+        print("the start point is:", "(", begin_x, ",", begin_y, ")")
+        print("the start point is:", "(", end_x, ",", end_y, ")")
+
+        # Main Loop
+        going = True
+        while going:
+            self.watch_keyboard()
+            clock.tick(20)
+            # check end
+
+            if pg.sprite.spritecollideany(self.player, wallsprites):
+                print("Got a collision")
+                break
+            elif self.player.compute_dis(endpoint.rect.centerx, endpoint.rect.centery) < 5:
+                print("Successfully reached the end")
+                break
+
+            # Handle Input Events
+            #
+            # for event in pg.event.get():
+            #     if event.type in (pg.QUIT, pg.KEYDOWN):
+            #         sys.exit()
+
+            wallsprites.update()
+
+            # Draw Everything
+            screen.blit(background, (0, 0))
+            wallsprites.draw(screen)
+            screen.blit(self.player.image, self.player.rect)
+            screen.blit(endpoint.image, endpoint.rect)
+            pg.display.update()
+            pg.display.flip()
+            # self.get_speed()
+            print(self.speed)
+            self.player.move(self.speed)
 
 
 if __name__ == '__main__':
     p = PlayBoard()
-    p.play()
+    p.play_4_fun()
