@@ -19,7 +19,6 @@ def get_speed():
     """
     pass
 
-
 # functions to create our resources
 def load_image(name, colorkey=None):
     try:
@@ -62,7 +61,6 @@ class WallUnit(pg.sprite.Sprite):
 
 
 class EndPoint(pg.sprite.Sprite):
-
     def __init__(self, end_x, end_y):
         pg.sprite.Sprite.__init__(self)
         self.image = pg.Surface([width, height])
