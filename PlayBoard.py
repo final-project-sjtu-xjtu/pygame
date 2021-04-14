@@ -102,8 +102,8 @@ class PlayBoard:
                     end_y = j
         self.player = Player(begin_x, begin_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         self.endpoint = EndPoint(end_x, end_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
-        print("the start point is:", "(", begin_x, ",", begin_y, ")")
-        print("the start point is:", "(", end_x, ",", end_y, ")")
+        print("the start point is:", "(", self.player.rect.centerx, ",", self.player.rect.centery, ")")
+        print("the start point is:", "(", self.endpoint.rect.centerx, ",", self.endpoint.rect.centery, ")")
         pg.init()
         self.screen = pg.display.set_mode((1000, 1000))  # 屏幕大小
         self.background = pg.Surface(self.screen.get_size())
@@ -118,8 +118,9 @@ class PlayBoard:
         self.pg_clock = pg.time.Clock()
 
         self.rrt = RRT(boundary=(0, 0, self.WHOLE_WIDTH, self.WHOLE_HEIGHT),
-                       goal=(end_x, end_y),
-                       seed=self.seed)
+                       goal=(self.endpoint.rect.centerx, self.endpoint.rect.centery),
+                       start_point=(self.player.rect.centerx, self.player.rect.centery),
+                       seed=seed)
 
     def watch_keyboard(self):
         self.speed = [0, 0]
@@ -138,18 +139,42 @@ class PlayBoard:
                 elif event.key == K_d:
                     self.speed = [1 * self.absolute_speed, 0]
 
+    @staticmethod
+    def compute_trace(x1, y1, x2, y2):
+        trace = []
+        k = (y2 - y1) / (x2 - x1)
+        if abs(k) < 1:  # 使用x轴为index
+            if x2 > x1:
+                for x in range(x1 + 1, x2):
+                    y_float = k * (x - x1) + y1
+                    y_int = round(y_float)
+                    trace.append((x, y_int))
+            else:
+                for x in range(x1 - 1, x2, -1):
+                    y_float = k * (x - x1) + y1
+                    y_int = round(y_float)
+                    trace.append((x, y_int))
+        else:  # 使用y轴为index
+            if y2 > y1:
+                for y in range(y1 + 1, y2):
+                    x_float = 1 / k * (y - y1) + x1
+                    x_int = round(x_float)
+                    trace.append((x_int, y))
+            else:
+                for y in range(y1 - 1, y2, -1):
+                    x_float = 1 / k * (y - y1) + x1
+                    x_int = round(x_float)
+                    trace.append((x_int, y))
+        trace.append((x2, y2))
+        return trace
+
     def move_player_2_specific_position(self, x2, y2, draw_trace=True) -> bool:
         """将车从目前位置，按照最接近直线的方式移动到[x2, y2]，移动成功返回True，否则返回False
         如果draw trace 是 True，会将移动的轨迹绘制出，并暂停一秒给你看看。
         后续的一个优化方向可以是把希望移动的函数传入，in the future."""
         x1, y1 = self.player.coord()
-        trace = []
-        k = (y2-y1) / (x2-x1)
-        for x in range(x1+1, x2):
-            y_float = k * (x - x1) + y1
-            y_int = round(y_float)
-            trace.append((x, y_int))
-        trace.append((x2, y2))
+        trace = self.compute_trace(x1, y1, x2, y2)
+
         last_coord = (x1, y1)
         result = True
         for coord in trace:
@@ -166,9 +191,11 @@ class PlayBoard:
 
     def collision_detect(self, x1, y1, x2, y2) -> bool:
         """Move the car from (x1, y1) to (x2, y2), find out if there are any collisions"""
+        if x1 == x2 and y1 == y2:
+            return False
         self.player.flash_at_specified_position(x1, y1)
         result = self.move_player_2_specific_position(x2, y2)
-        return result
+        return not result
 
     def algo(self) -> Tuple[int, int, int, int, RRT.Node]:
         """返回车要去的点"""
@@ -193,8 +220,6 @@ class PlayBoard:
             x1, y1, x2, y2, nearest_node = self.algo()
             collide = self.collision_detect(x1, y1, x2, y2)
             self.rrt.update(x2, y2, nearest_node, collide)
-
-
 
     def play_4_fun(self):
         """仅仅拿来测试，正式不使用。"""

@@ -14,11 +14,13 @@ class RRT:
     def __init__(self,
                  boundary: Tuple[int, int, int, int],
                  goal: Tuple[int, int],
+                 start_point: Tuple[int, int],
                  seed: int = 1,
                  goal_sample_rate: int = 5,
                  step: int = 30):
         random.seed(seed)
-        self.node_list = []
+        start_node = self.Node(*start_point)
+        self.node_list = [start_node]
         self.goal_sample_rate = goal_sample_rate
         self.boundary = boundary
         self.goal = goal
