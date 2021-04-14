@@ -7,6 +7,7 @@ from maze_map_generator import MazeMapGenerator
 from pygame.locals import *
 import random
 from typing import Tuple
+import time
 
 BLACK = 0, 0, 0
 WHITE = 255, 255, 255
@@ -76,7 +77,6 @@ class PlayBoard:
         self.speed = [0, 0]
         self.player = Player(0, 0, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         self.wallsprites = pg.sprite.Group()
-        self.screen = pg.display.set_mode((1000, 1000))  # 屏幕大小
 
         # Get the maze map
         self.maze_map = maze_map_generator.get_a_maze_map(self.WIDTH, self.HEIGHT)
@@ -101,10 +101,14 @@ class PlayBoard:
         self.endpoint = EndPoint(end_x, end_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         print("the start point is:", "(", begin_x, ",", begin_y, ")")
         print("the start point is:", "(", end_x, ",", end_y, ")")
+        pg.init()
+        self.screen = pg.display.set_mode((1000, 1000))  # 屏幕大小
         self.background = pg.Surface(self.screen.get_size())
         self.background = self.background.convert()
         self.background.fill((250, 250, 250))
-        # self.play()
+        self.screen.blit(self.background, (0, 0))
+        pg.display.flip()
+        self.pg_clock = pg.time.Clock()
 
     def watch_keyboard(self):
         self.speed = [0, 0]
@@ -123,8 +127,9 @@ class PlayBoard:
                 elif event.key == K_d:
                     self.speed = [1 * self.absolute_speed, 0]
 
-    def move_player_2_specific_position(self, x2, y2) -> bool:
+    def move_player_2_specific_position(self, x2, y2, draw_trace=True) -> bool:
         """将车从目前位置，按照最接近直线的方式移动到[x2, y2]，移动成功返回True，否则返回False
+        如果draw trace 是 True，会将移动的轨迹绘制出，并暂停一秒给你看看。
         后续的一个优化方向可以是把希望移动的函数传入，in the future."""
         x1, y1 = self.player.coord()
         trace = []
@@ -135,12 +140,18 @@ class PlayBoard:
             trace.append((x, y_int))
         trace.append((x2, y2))
         last_coord = (x1, y1)
+        result = True
         for coord in trace:
             self.player.rect = self.player.rect.move((coord[0]-last_coord[0], coord[1] - last_coord[1]))
             if pg.sprite.spritecollideany(self.player, self.wallsprites):
-                return False
+                result = False
+            if draw_trace:
+                self.screen.blit(self.player.image, self.player.rect)
+                pg.display.update(self.player.rect)
             last_coord = coord
-        return True
+        if draw_trace:
+            time.sleep(1)  # 暂停一秒给你看看trace。
+        return result
 
     def collision_detect(self, x1, y1, x2, y2) -> bool:
         """Move the car from (x1, y1) to (x2, y2), find out if there are any collisions"""
@@ -154,27 +165,11 @@ class PlayBoard:
         pass
         return x, y
 
-    # def construct_components(self):
-
-
     def play(self):
         """正式使用的函数"""
-        pg.init()
-        # Display The Background
-        self.screen.blit(self.background, (0, 0))
-        pg.display.flip()
-        clock = pg.time.Clock()
-
-        # Main Loop
         going = True
         while going:
-            self.watch_keyboard()
-            clock.tick(2)  # 每秒钟最多多少帧
-            # check end
-
-            # if pg.sprite.spritecollideany(self.player, self.wallsprites):
-            #     print("Got a collision")
-            #     break
+            self.pg_clock.tick(2)  # 每秒钟最多多少帧
             if self.player.compute_dis(self.endpoint.rect.centerx, self.endpoint.rect.centery) < 5:
                 print("Successfully reached the end")
                 break
@@ -186,8 +181,8 @@ class PlayBoard:
             self.wallsprites.draw(self.screen)
             self.screen.blit(self.player.image, self.player.rect)
             self.screen.blit(self.endpoint.image, self.endpoint.rect)
-            pg.display.update()
-            pg.display.flip()
+            # pg.display.update()  # only update specified contents; but update the entire display passing no arguments.
+            pg.display.flip()  # update the contents of the entire display
             # self.get_speed()
             print(self.speed)
             self.player.move(self.speed)
