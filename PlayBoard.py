@@ -8,6 +8,7 @@ from pygame.locals import *
 import random
 from typing import Tuple
 import time
+from RRT.RRT import RRT
 
 BLACK = 0, 0, 0
 WHITE = 255, 255, 255
@@ -107,8 +108,14 @@ class PlayBoard:
         self.background = self.background.convert()
         self.background.fill((250, 250, 250))
         self.screen.blit(self.background, (0, 0))
+        self.wallsprites.update()
+        self.wallsprites.draw(self.screen)
+        self.screen.blit(self.player.image, self.player.rect)
+        self.screen.blit(self.endpoint.image, self.endpoint.rect)
         pg.display.flip()
         self.pg_clock = pg.time.Clock()
+
+        self.rrt = RRT()
 
     def watch_keyboard(self):
         self.speed = [0, 0]
@@ -159,11 +166,10 @@ class PlayBoard:
         result = self.move_player_2_specific_position(x2, y2)
         return result
 
-    def algo(self) -> Tuple[int, int]:
+    def algo(self) -> Tuple[int, int, int, int]:
         """返回车要去的点"""
-        x = y = 0
-        pass
-        return x, y
+        x1, y1, x2, y2 = self.rrt.get_a_point()
+        return x1, y1, x2, y2
 
     def play(self):
         """正式使用的函数"""
@@ -174,20 +180,17 @@ class PlayBoard:
                 print("Successfully reached the end")
                 break
 
-            self.wallsprites.update()
 
-            # Draw Everything
-            self.screen.blit(self.background, (0, 0))
-            self.wallsprites.draw(self.screen)
-            self.screen.blit(self.player.image, self.player.rect)
-            self.screen.blit(self.endpoint.image, self.endpoint.rect)
             # pg.display.update()  # only update specified contents; but update the entire display passing no arguments.
             pg.display.flip()  # update the contents of the entire display
             # self.get_speed()
-            print(self.speed)
-            self.player.move(self.speed)
             # self.player.flash_at_specified_position(*[int(i) for i in input("with format [x,y]").split(',')])
             # self.flash_player_at_position(*[int(i) for i in input("with format [x,y]").split(',')])
+            x1, y1, x2, y2 = self.algo()
+            collide = self.collision_detect(x1, y1, x2, y2)
+            self.rrt.update(x2, y2, collide)
+
+
 
     def play_4_fun(self):
         """仅仅拿来测试，正式不使用。"""
