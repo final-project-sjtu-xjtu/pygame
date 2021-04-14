@@ -5,10 +5,8 @@ import math
 import maze_map_generator
 from maze_map_generator import MazeMapGenerator
 from pygame.locals import *
-from random import seed
+import random
 from typing import Tuple
-
-seed(0)
 
 BLACK = 0, 0, 0
 WHITE = 255, 255, 255
@@ -36,11 +34,12 @@ class Player(pg.sprite.Sprite):
     def coord(self):
         return self.rect.centerx, self.rect.centery
 
-
-
-
     def move(self, speed):
         self.rect = self.rect.move(speed)
+
+    def flash_at_specified_position(self, x2, y2):
+        x1, y1 = self.coord()
+        self.rect = self.rect.move((x2-x1, y2-y1))
 
     def compute_dis(self, end_x, end_y):
         dis_x = abs(self.rect.centerx - end_x)
@@ -65,10 +64,11 @@ class EndPoint(pg.sprite.Sprite):
 
 
 class PlayBoard:
-    def __init__(self):
+    def __init__(self, seed: int = 1):
+        random.seed(seed)
         self.CUBE_WIDTH = 100  # 每个方块大小
         self.CUBE_HEIGHT = 100
-        self.WIDTH = 10
+        self.WIDTH = 10  # 有几个方块
         self.HEIGHT = 10
         self.absolute_speed = 10
         self.speed = [0, 0]
@@ -76,6 +76,34 @@ class PlayBoard:
         self.speed = [0, 0]
         self.player = Player(0, 0, self.CUBE_WIDTH, self.CUBE_HEIGHT)
         self.wallsprites = pg.sprite.Group()
+        self.screen = pg.display.set_mode((1000, 1000))  # 屏幕大小
+
+        # Get the maze map
+        self.maze_map = maze_map_generator.get_a_maze_map(self.WIDTH, self.HEIGHT)
+        end_x = end_y = 0
+        begin_x = begin_y = 0
+        # print(type(background_group))
+        cnt = 0
+        for i in range(len(self.maze_map[0])):
+            for j in range(len(self.maze_map)):
+                if self.maze_map[j][i] == 1:
+                    wall = WallUnit(i, j, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+                    self.block_group.append(wall)
+                    self.wallsprites.add(wall)
+                elif self.maze_map[j][i] == 0:
+                    if cnt == 0:  # 左上的第一个非墙标记为起点
+                        begin_x = i
+                        begin_y = j
+                    cnt = cnt + 1
+                    end_x = i  # 右下的最后一个标记为终点
+                    end_y = j
+        self.player = Player(begin_x, begin_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+        self.endpoint = EndPoint(end_x, end_y, self.CUBE_WIDTH, self.CUBE_HEIGHT)
+        print("the start point is:", "(", begin_x, ",", begin_y, ")")
+        print("the start point is:", "(", end_x, ",", end_y, ")")
+        self.background = pg.Surface(self.screen.get_size())
+        self.background = self.background.convert()
+        self.background.fill((250, 250, 250))
         # self.play()
 
     def watch_keyboard(self):
@@ -95,11 +123,7 @@ class PlayBoard:
                 elif event.key == K_d:
                     self.speed = [1 * self.absolute_speed, 0]
 
-    def flash_player_at_position(self, x: int, y: int) -> None:
-        """在给定坐标刷新车，并把之前出现过的车都清除（我理解，清除这一步应该是要改主函数）。"""
-        pass
-
-    def move_player_specific_position(self, x2, y2) -> bool:
+    def move_player_2_specific_position(self, x2, y2) -> bool:
         """将车从目前位置，按照最接近直线的方式移动到[x2, y2]，移动成功返回True，否则返回False
         后续的一个优化方向可以是把希望移动的函数传入，in the future."""
         x1, y1 = self.player.coord()
@@ -120,8 +144,8 @@ class PlayBoard:
 
     def collision_detect(self, x1, y1, x2, y2) -> bool:
         """Move the car from (x1, y1) to (x2, y2), find out if there are any collisions"""
-        self.flash_player_at_position(x1, y1)
-        result = self.move_player_specific_position(x2, y2)
+        self.player.flash_at_specified_position(x1, y1)
+        result = self.move_player_2_specific_position(x2, y2)
         return result
 
     def algo(self) -> Tuple[int, int]:
@@ -130,9 +154,45 @@ class PlayBoard:
         pass
         return x, y
 
+    # def construct_components(self):
+
+
     def play(self):
         """正式使用的函数"""
-        pass
+        pg.init()
+        # Display The Background
+        self.screen.blit(self.background, (0, 0))
+        pg.display.flip()
+        clock = pg.time.Clock()
+
+        # Main Loop
+        going = True
+        while going:
+            self.watch_keyboard()
+            clock.tick(2)  # 每秒钟最多多少帧
+            # check end
+
+            # if pg.sprite.spritecollideany(self.player, self.wallsprites):
+            #     print("Got a collision")
+            #     break
+            if self.player.compute_dis(self.endpoint.rect.centerx, self.endpoint.rect.centery) < 5:
+                print("Successfully reached the end")
+                break
+
+            self.wallsprites.update()
+
+            # Draw Everything
+            self.screen.blit(self.background, (0, 0))
+            self.wallsprites.draw(self.screen)
+            self.screen.blit(self.player.image, self.player.rect)
+            self.screen.blit(self.endpoint.image, self.endpoint.rect)
+            pg.display.update()
+            pg.display.flip()
+            # self.get_speed()
+            print(self.speed)
+            self.player.move(self.speed)
+            # self.player.flash_at_specified_position(*[int(i) for i in input("with format [x,y]").split(',')])
+            # self.flash_player_at_position(*[int(i) for i in input("with format [x,y]").split(',')])
 
     def play_4_fun(self):
         """仅仅拿来测试，正式不使用。"""
@@ -178,7 +238,7 @@ class PlayBoard:
         going = True
         while going:
             self.watch_keyboard()
-            clock.tick(20)
+            clock.tick(20)  # 每秒钟最多多少帧
             # check end
 
             if pg.sprite.spritecollideany(self.player, self.wallsprites):
@@ -210,4 +270,4 @@ class PlayBoard:
 
 if __name__ == '__main__':
     p = PlayBoard()
-    p.play_4_fun()
+    p.play()
