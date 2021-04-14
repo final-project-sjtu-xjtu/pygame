@@ -193,8 +193,8 @@ class PlayBoard:
                 self.screen.blit(self.player.image, self.player.rect)
                 pg.display.update(self.player.rect)
             last_coord = coord
-        if draw_trace:
-            time.sleep(1)  # 暂停一秒给你看看trace。
+        # if draw_trace:
+        #     time.sleep(1)  # 暂停一秒给你看看trace。
         return result
 
     def collision_detect(self, x1, y1, x2, y2) -> bool:
@@ -215,10 +215,6 @@ class PlayBoard:
         going = True
         while going:
             self.pg_clock.tick(2)  # 每秒钟最多多少帧
-            if self.player.compute_dis(self.endpoint.rect.centerx, self.endpoint.rect.centery) < 5:
-                print("Successfully reached the end")
-                break
-
 
             # pg.display.update()  # only update specified contents; but update the entire display passing no arguments.
             pg.display.flip()  # update the contents of the entire display
@@ -227,6 +223,10 @@ class PlayBoard:
             # self.flash_player_at_position(*[int(i) for i in input("with format [x,y]").split(',')])
             x1, y1, x2, y2, nearest_node = self.algo()
             collide = self.collision_detect(x1, y1, x2, y2)
+            if self.player.compute_dis(self.endpoint.rect.centerx, self.endpoint.rect.centery) < self.CUBE_WIDTH / 2:
+                print("Successfully reached the end")
+                pg.image.save(self.screen, "screenshot.jpg")
+                input(1)
             self.rrt.update(x2, y2, nearest_node, collide)
 
     def play_4_fun(self):
