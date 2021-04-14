@@ -142,6 +142,14 @@ class PlayBoard:
     @staticmethod
     def compute_trace(x1, y1, x2, y2):
         trace = []
+        if x1 == x2:  # 防止除0出现
+            if y2 > y1:
+                for y in range(y1 + 1, y2):
+                    trace.append((x1, y))
+            else:
+                for y in range(y1 - 1, y2, -1):
+                    trace.append((x1, y))
+            return trace
         k = (y2 - y1) / (x2 - x1)
         if abs(k) < 1:  # 使用x轴为index
             if x2 > x1:
