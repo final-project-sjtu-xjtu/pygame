@@ -72,6 +72,8 @@ class PlayBoard:
         self.CUBE_HEIGHT = 100
         self.WIDTH = 10  # 有几个方块
         self.HEIGHT = 10
+        self.WHOLE_WIDTH = self.CUBE_WIDTH * self.WIDTH
+        self.WHOLE_HEIGHT = self.CUBE_HEIGHT * self.HEIGHT
         self.absolute_speed = 10
         self.speed = [0, 0]
         self.block_group = []
@@ -115,7 +117,9 @@ class PlayBoard:
         pg.display.flip()
         self.pg_clock = pg.time.Clock()
 
-        self.rrt = RRT()
+        self.rrt = RRT(boundary=(0, 0, self.WHOLE_WIDTH, self.WHOLE_HEIGHT),
+                       goal=(end_x, end_y),
+                       seed=self.seed)
 
     def watch_keyboard(self):
         self.speed = [0, 0]
@@ -166,10 +170,10 @@ class PlayBoard:
         result = self.move_player_2_specific_position(x2, y2)
         return result
 
-    def algo(self) -> Tuple[int, int, int, int]:
+    def algo(self) -> Tuple[int, int, int, int, RRT.Node]:
         """返回车要去的点"""
-        x1, y1, x2, y2 = self.rrt.get_a_point()
-        return x1, y1, x2, y2
+        x1, y1, x2, y2, nearest_node = self.rrt.get_a_point()
+        return x1, y1, x2, y2, nearest_node
 
     def play(self):
         """正式使用的函数"""
@@ -186,9 +190,9 @@ class PlayBoard:
             # self.get_speed()
             # self.player.flash_at_specified_position(*[int(i) for i in input("with format [x,y]").split(',')])
             # self.flash_player_at_position(*[int(i) for i in input("with format [x,y]").split(',')])
-            x1, y1, x2, y2 = self.algo()
+            x1, y1, x2, y2, nearest_node = self.algo()
             collide = self.collision_detect(x1, y1, x2, y2)
-            self.rrt.update(x2, y2, collide)
+            self.rrt.update(x2, y2, nearest_node, collide)
 
 
 
