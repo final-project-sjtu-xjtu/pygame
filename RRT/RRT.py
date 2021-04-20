@@ -2,6 +2,8 @@ from typing import Tuple
 import random
 import random
 import math
+import cv2
+import numpy as np
 
 
 class RRT:
@@ -10,6 +12,26 @@ class RRT:
             self.x = x
             self.y = y
             self.parent = None
+            self.child = []
+
+    class Stack:
+        def __init__(self):
+            self.items = []
+
+        def is_empty(self):
+            return self.items == []
+
+        def push(self, item):
+            self.items.append(item)
+
+        def pop(self):
+            return self.items.pop()
+
+        def peek(self):
+            return self.items[len(self.items) - 1]
+
+        def size(self):
+            return len(self.items)
 
     def __init__(self,
                  boundary: Tuple[int, int, int, int],
@@ -43,6 +65,7 @@ class RRT:
             node = self.Node(x, y)
             node.parent = nearest_node
             self.node_list.append(node)
+            nearest_node.child.append(node)
 
     def get_random_node(self):
         if random.randint(0, 100) > self.goal_sample_rate:
@@ -58,3 +81,22 @@ class RRT:
         minind = dlist.index(min(dlist))
 
         return self.node_list[minind]
+
+    def potential_field_map_generator(self, root_node: Node, map_width, map_height):
+        node_stack = self.Stack()
+        pfmap_size = (map_width, map_height, 3)
+        pfmap = np.ones(pfmap_size) * 255
+        node_stack.push(root_node)
+        linethickness = 1
+        radius = 5
+        while node_stack.size() > 0:
+            node = node_stack.pop()
+            cv2.circle(pfmap, (node.x, node.y), radius, (0, 0, 255), -1)
+            if node.child:
+                for i in node.child:
+                    node_stack.push(i)
+            if node.parent:
+                print("yes")
+                cv2.line(pfmap, (node.x, node.y), (node.parent.x, node.parent.y), (0, 0, 0), linethickness)
+        cv2.imshow('pfmap', pfmap)
+        cv2.waitKey()

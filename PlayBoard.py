@@ -216,7 +216,7 @@ class PlayBoard:
         while going:
             self.pg_clock.tick(2)  # 每秒钟最多多少帧
 
-            # pg.display.update()  # only update specified contents; but update the entire display passing no arguments.
+            # pg.display.update()  # only update specified cont but update the entire disents;play passing no arguments.
             pg.display.flip()  # update the contents of the entire display
             # self.get_speed()
             # self.player.flash_at_specified_position(*[int(i) for i in input("with format [x,y]").split(',')])
