@@ -61,7 +61,7 @@ def test():
     n121.parent = n12
     n122.parent = n12
     rrt = RRT((0, 0, 0, 0), (0, 0), (0, 0))
-    return rrt.potential_field_map_generator(n1, 150, 150, 150, 150)
+    return rrt.potential_field_map_generator(n1, 1000, 1000, 256, 256)
 
 
 if __name__ == '__main__':

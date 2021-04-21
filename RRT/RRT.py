@@ -57,8 +57,8 @@ class RRT:
         pfmap_size = (origin_map_width, origin_map_height)
         pfmap = np.ones(pfmap_size) * 255
         node_stack.push(root_node)
-        linethickness = origin_map_height // 100 + 1  # 线的粗细; 防止小于1
-        radius = origin_map_height // 20 + 1  # 圆的半径
+        linethickness = origin_map_height // 100  # 线的粗细; 防止小于1
+        radius = origin_map_height // 5  # 圆的半径
         while node_stack.size() > 0:
             node = node_stack.pop()
             cv2.circle(pfmap, (node.x, node.y), radius, 0.5, -1)
@@ -70,7 +70,7 @@ class RRT:
                 cv2.line(pfmap, (node.x, node.y), (node.parent.x, node.parent.y), 0, linethickness)
         # cv2.imshow('pfmap', pfmap)
         # cv2.waitKey()
-        pfmap = cv2.resize(pfmap, (target_map_width, target_map_height), interpolation=cv2.INTER_NEAREST)
+        pfmap = cv2.resize(pfmap, (target_map_width, target_map_height), interpolation=cv2.INTER_AREA)
         return pfmap
 
     def get_a_point(self) -> Tuple[int, int, int, int, Node]:
