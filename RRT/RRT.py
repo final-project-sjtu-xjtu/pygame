@@ -4,6 +4,8 @@ import random
 import math
 import cv2
 import numpy as np
+from .RRTBrain import RRTBrain
+from numpy import ndarray
 
 
 class RRT:
@@ -47,6 +49,29 @@ class RRT:
         self.boundary = boundary
         self.goal = goal
         self.step = step  # 每一步定向生长的长度
+        self.brain = RRTBrain()
+
+    def potential_field_map_generator(self, root_node: Node, origin_map_width: int, origin_map_height: int,
+                                      target_map_width: int, target_map_height: int) -> ndarray:
+        node_stack = self.Stack()
+        pfmap_size = (origin_map_width, origin_map_height)
+        pfmap = np.ones(pfmap_size) * 255
+        node_stack.push(root_node)
+        linethickness = origin_map_height // 100 + 1  # 线的粗细; 防止小于1
+        radius = origin_map_height // 20 + 1  # 圆的半径
+        while node_stack.size() > 0:
+            node = node_stack.pop()
+            cv2.circle(pfmap, (node.x, node.y), radius, 0.5, -1)
+            if node.child:
+                for i in node.child:
+                    node_stack.push(i)
+            if node.parent:
+                print("yes")
+                cv2.line(pfmap, (node.x, node.y), (node.parent.x, node.parent.y), 0, linethickness)
+        # cv2.imshow('pfmap', pfmap)
+        # cv2.waitKey()
+        pfmap = cv2.resize(pfmap, (target_map_width, target_map_height), interpolation=cv2.INTER_NEAREST)
+        return pfmap
 
     def get_a_point(self) -> Tuple[int, int, int, int, Node]:
         """x1, y1, x2, y2"""
@@ -60,20 +85,24 @@ class RRT:
         y2 = round(y1+(y2_-y1)*scale)
         return x1, y1, x2, y2, nearest_node
 
-    def update(self, x: int, y: int, nearest_node: Node, collide: bool):
+    def update(self, x: int, y: int, nearest_node: Node, collide: bool) -> None:
         if not collide:
             node = self.Node(x, y)
             node.parent = nearest_node
             self.node_list.append(node)
             nearest_node.child.append(node)
 
-    def get_random_node(self):
+    def get_random_node(self) -> Node:
         if random.randint(0, 100) > self.goal_sample_rate:
             rnd = self.Node(random.uniform(self.boundary[0], self.boundary[2]),
                             random.uniform(self.boundary[1], self.boundary[3]))
         else:  # goal point sampling
             rnd = self.Node(self.goal[0], self.goal[1])
         return rnd
+
+    def get_smart_node(self) -> Node:
+        coord = self.brain.get_a_coord()
+        return self.Node(*coord)
 
     def get_nearest_node_node(self, rnd_node: Node) -> Node:        # 找最近节点
         dlist = [(node.x - rnd_node.x) ** 2 + (node.y - rnd_node.y)
@@ -82,21 +111,4 @@ class RRT:
 
         return self.node_list[minind]
 
-    def potential_field_map_generator(self, root_node: Node, map_width, map_height):
-        node_stack = self.Stack()
-        pfmap_size = (map_width, map_height, 3)
-        pfmap = np.ones(pfmap_size) * 255
-        node_stack.push(root_node)
-        linethickness = 1
-        radius = 5
-        while node_stack.size() > 0:
-            node = node_stack.pop()
-            cv2.circle(pfmap, (node.x, node.y), radius, (0, 0, 255), -1)
-            if node.child:
-                for i in node.child:
-                    node_stack.push(i)
-            if node.parent:
-                print("yes")
-                cv2.line(pfmap, (node.x, node.y), (node.parent.x, node.parent.y), (0, 0, 0), linethickness)
-        cv2.imshow('pfmap', pfmap)
-        cv2.waitKey()
+
